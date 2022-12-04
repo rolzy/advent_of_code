@@ -144,4 +144,31 @@ elif DAY == '3':
     print(f'The sum of priorities is {priority_sum}')
     print(f'The sum of badges is {badge_sum}')
 
+elif DAY == '4':
+    print('Solving for DAY 4')
 
+    with open(INPUT_FILE, 'r') as f:
+        text_input = f.readlines()
+
+    overlap_count = 0
+    any_overlap_count = 0
+    for line in text_input:
+        line = line.strip()
+        elf1_range = line.split(',')[0]
+        elf2_range = line.split(',')[1]
+        
+        elf1_min = int(elf1_range.split('-')[0])
+        elf1_max = int(elf1_range.split('-')[1])
+        elf2_min = int(elf2_range.split('-')[0])
+        elf2_max = int(elf2_range.split('-')[1])
+
+        if (elf1_min <= elf2_min and elf1_max >= elf2_max) or \
+                (elf2_min <= elf1_min and elf2_max >= elf1_max):
+            overlap_count += 1
+            any_overlap_count += 1
+        elif (elf2_max >= elf1_max >= elf2_min) or \
+                (elf1_max >= elf2_max >= elf1_min):
+            any_overlap_count += 1
+
+    print(f'There are {overlap_count} overlaps')
+    print(f'There are {any_overlap_count} any-overlaps')
