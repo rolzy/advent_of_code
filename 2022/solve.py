@@ -172,3 +172,52 @@ elif DAY == '4':
 
     print(f'There are {overlap_count} overlaps')
     print(f'There are {any_overlap_count} any-overlaps')
+
+elif DAY == '5':
+    print('Solving for DAY 5')
+
+    with open(INPUT_FILE, 'r') as f:
+        text_input = f.readlines()
+
+    break_index = text_input.index('\n')
+    initial_stack = text_input[:break_index]
+    operations = text_input[break_index+1:]
+
+    stacks = {1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9:[]}
+    for line in initial_stack:
+        line = line.strip()
+        stack = 1
+        skip_counter = 0
+        for char in line.split(' '):
+            if '[' in char:
+                stacks[stack].append(char.replace('[', '').replace(']', ''))
+                stack += 1
+            elif char == '':
+                skip_counter += 1
+                if skip_counter == 4:
+                    stack += 1
+                    skip_counter = 0
+            else:
+                break
+
+    #PART 1
+    #for line in operations:
+    #    quantity = int(line.split(' ')[1])
+    #    origin = int(line.split(' ')[3])
+    #    destination = int(line.split(' ')[5])
+
+    #    for i in range(quantity):
+    #        stack = stacks.get(origin).pop(0)
+    #        stacks.get(destination).insert(0, stack)
+    #    for key, value in stacks.items():
+    #        print(f'{key}: {value}')
+
+    #PART 2
+    for line in operations:
+        quantity = int(line.split(' ')[1])
+        origin = int(line.split(' ')[3])
+        destination = int(line.split(' ')[5])
+
+        stack = stacks.get(origin)[:quantity]
+        stacks[destination] = stack + stacks.get(destination)
+        stacks[origin] = stacks[origin][quantity:]
