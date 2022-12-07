@@ -221,3 +221,21 @@ elif DAY == '5':
         stack = stacks.get(origin)[:quantity]
         stacks[destination] = stack + stacks.get(destination)
         stacks[origin] = stacks[origin][quantity:]
+
+elif DAY == '6':
+    print('Solving for DAY 6')
+
+    with open(INPUT_FILE, 'r') as f:
+        text_input = f.read().strip()
+
+    def unique(s):
+        return len(set(s)) == len(s)
+
+    for i in range(len(text_input)):
+        packet_string = text_input[i:i+4]
+        message_string = text_input[i:i+14]
+        if unique(packet_string):
+            print(f'The packet starts at {i+4}')
+        if unique(message_string):
+            print(f'The message starts at {i+14}')
+            break
