@@ -239,3 +239,68 @@ elif DAY == '6':
         if unique(message_string):
             print(f'The message starts at {i+14}')
             break
+
+elif DAY == '7':
+    print('Solving for DAY 7')
+
+    with open(INPUT_FILE, 'r') as f:
+        text_input = f.readlines()
+
+    MAX_SIZE = 100000
+    directories = {}
+
+    def traverse(line_number, current_directory, depth):
+        current_directory = current_directory + str(depth) # make the dir ID unique
+        # how can you have directories with the same name in the same depth!?
+        if directories.get(current_directory):
+            i = 2
+            while True:
+                current_directory = current_directory + str(depth) + '_' + str(i)
+                if not directories.get(current_directory):
+                    break
+                i += 1
+        directories[current_directory] = 0
+        print('    '*depth + f'Start traversing directory {current_directory}')
+        while line_number < len(text_input):
+            line = text_input[line_number].strip()
+            line_number += 1
+            print('    '*depth + f'{line.strip()}')
+            if line[0] == '$':
+                print('    '*depth + 'The line is a command')
+                if 'cd' in line:
+                    print('    '*depth + f'The command is change-directory')
+                    target_directory = line.split(' ')[2]
+                    if target_directory == '..':
+                        return line_number, directories.get(current_directory)
+                    elif target_directory != '/':
+                        line_number, child_dir_size = traverse(line_number, target_directory, depth+1)
+                        directories[current_directory] += child_dir_size
+                        print('    '*depth + f'The size of the child dir {target_directory} was {child_dir_size}')
+                        print('    '*depth + f'The size of the current dir {current_directory} is now {directories.get(current_directory)}')
+                elif 'ls' in line:
+                    print('    '*depth + 'The command is list')
+                else:
+                    raise "Unknown command"
+            elif line.startswith('dir'):
+                subdir_name = line.split(' ')[1]
+                print('    '*depth + f'There is a directory {subdir_name}')
+            elif line[0].isdigit():
+                file_size = line.split(' ')[0]
+                print('    '*depth + f'There is a file with size {file_size}')
+                directories[current_directory] += int(file_size)
+                print('    '*depth + f'The size of the current dir {current_directory} is now {directories.get(current_directory)}')
+            if line_number == len(text_input):
+                return line_number, directories.get(current_directory)
+
+    traverse(0, '/', 0)
+    small_folder_sum = sum([i for i in directories.values() if i <= MAX_SIZE])
+    print(f"The sum of small folders is {small_folder_sum}")
+
+    TOTAL_DISK_SPACE=70_000_000
+    REQUIRED_DISK_SPACE=30_000_000
+
+    available_space = TOTAL_DISK_SPACE - directories['/0']
+    space_to_delete = REQUIRED_DISK_SPACE - available_space
+    sorted_directories = sorted(directories.items(), key=lambda x: x[1], reverse=True)
+    min_ind = sorted_directories.index(min([i for i in sorted_directories if i[1] > space_to_delete], key=lambda tup: tup[1]))
+    print(f'The size of the folder that will free up enough space is {sorted_directories[min_ind]}')
