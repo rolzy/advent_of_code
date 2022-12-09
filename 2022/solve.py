@@ -251,7 +251,6 @@ elif DAY == '7':
 
     def traverse(line_number, current_directory, depth):
         current_directory = current_directory + str(depth) # make the dir ID unique
-        # how can you have directories with the same name in the same depth!?
         if directories.get(current_directory):
             i = 2
             while True:
@@ -260,35 +259,22 @@ elif DAY == '7':
                     break
                 i += 1
         directories[current_directory] = 0
-        print('    '*depth + f'Start traversing directory {current_directory}')
         while line_number < len(text_input):
             line = text_input[line_number].strip()
             line_number += 1
-            print('    '*depth + f'{line.strip()}')
             if line[0] == '$':
-                print('    '*depth + 'The line is a command')
                 if 'cd' in line:
-                    print('    '*depth + f'The command is change-directory')
                     target_directory = line.split(' ')[2]
                     if target_directory == '..':
                         return line_number, directories.get(current_directory)
                     elif target_directory != '/':
                         line_number, child_dir_size = traverse(line_number, target_directory, depth+1)
                         directories[current_directory] += child_dir_size
-                        print('    '*depth + f'The size of the child dir {target_directory} was {child_dir_size}')
-                        print('    '*depth + f'The size of the current dir {current_directory} is now {directories.get(current_directory)}')
-                elif 'ls' in line:
-                    print('    '*depth + 'The command is list')
-                else:
-                    raise "Unknown command"
             elif line.startswith('dir'):
                 subdir_name = line.split(' ')[1]
-                print('    '*depth + f'There is a directory {subdir_name}')
             elif line[0].isdigit():
                 file_size = line.split(' ')[0]
-                print('    '*depth + f'There is a file with size {file_size}')
                 directories[current_directory] += int(file_size)
-                print('    '*depth + f'The size of the current dir {current_directory} is now {directories.get(current_directory)}')
             if line_number == len(text_input):
                 return line_number, directories.get(current_directory)
 
@@ -304,3 +290,56 @@ elif DAY == '7':
     sorted_directories = sorted(directories.items(), key=lambda x: x[1], reverse=True)
     min_ind = sorted_directories.index(min([i for i in sorted_directories if i[1] > space_to_delete], key=lambda tup: tup[1]))
     print(f'The size of the folder that will free up enough space is {sorted_directories[min_ind]}')
+
+elif DAY == '8':
+    print('Solving for DAY 8')
+
+    with open(INPUT_FILE, 'r') as f:
+        rows = f.readlines()
+
+    rows = [[int(char) for char in list(row.strip())] for row in rows]
+    columns = []
+
+    for line in rows:
+        for i, char in enumerate(line):
+            try:
+                columns[i].append(char)
+            except IndexError:
+                columns.append([char])
+
+
+    def is_visible(row, col, row_ind, col_ind):
+        height = row[col_ind]
+        if all([height > tree for tree in row[:col_ind]]) or \
+            all([height > tree for tree in row[col_ind+1:]]):
+            return True
+        elif all([height > tree for tree in col[:row_ind]]) or \
+            all([height > tree for tree in col[row_ind+1:]]):
+            return True
+        return False
+
+    def view_score(row, col, row_ind, col_ind):
+        height = row[col_ind]
+        left_trees = list(reversed(row[:col_ind]))
+        right_trees = row[col_ind+1:]
+        up_trees = list(reversed(col[:row_ind]))
+        down_trees = col[row_ind+1:]
+
+        left_score = next((i+1 for i, x in enumerate(left_trees) if x >= height), len(left_trees))
+        right_score = next((i+1 for i, x in enumerate(right_trees) if x >= height), len(right_trees))
+        up_score = next((i+1 for i, x in enumerate(up_trees) if x >= height), len(up_trees))
+        down_score = next((i+1 for i, x in enumerate(down_trees) if x >= height), len(down_trees))
+
+        return left_score * right_score * up_score * down_score
+
+    visible = 0
+    visibility_scores = []
+    for i, row in enumerate(rows):
+        for j, col in enumerate(columns):
+            if is_visible(row, col, i, j):
+                visible += 1
+            visibility_scores.append(view_score(row, col, i, j))
+
+    print(f'There are {visible} visible trees.')
+    print(f'There best tree has a visibility score of {max(visibility_scores)}.')
+
