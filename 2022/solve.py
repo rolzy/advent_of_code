@@ -343,3 +343,79 @@ elif DAY == '8':
     print(f'There are {visible} visible trees.')
     print(f'There best tree has a visibility score of {max(visibility_scores)}.')
 
+elif DAY == '9':
+    print('Solving for DAY 9')
+
+    with open(INPUT_FILE, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+
+    class Point:
+        def __init__(self, x: int, y: int):
+            self.x = x
+            self.y = y
+            self.visited_points = [(x, y)]
+
+        def __repr__(self):
+            return f'({self.x}, {self.y})'
+
+        def set_coords(self, delta_x: int, delta_y: int):
+            self.x += delta_x
+            self.y += delta_y
+
+            if (self.x, self.y) not in self.visited_points:
+                self.visited_points.append((self.x, self.y))
+
+
+    class State:
+        def __init__(self, rope):
+            self.rope = rope
+
+        def tail_needs_moving(self, tail_index):
+            head = self.rope[tail_index - 1]
+            tail = self.rope[tail_index]
+            return (abs(head.x-tail.x)>1) or \
+                (abs(head.y-tail.y)>1)
+
+        def move_head(self, direction: str, distance: int):
+            for _ in range(1, distance+1):
+                multiplier = 1 if direction in ['R', 'U'] else -1
+                if direction in ['L', 'R']:
+                    delta_x = 1*multiplier
+                    delta_y = 0
+                elif direction in ['U', 'D']:
+                    delta_x = 0
+                    delta_y = 1*multiplier
+                else:
+                    sys.exit()
+
+                self.rope[0].set_coords(delta_x, delta_y)
+
+                for i, tail in enumerate(self.rope):
+                    if i == 0:
+                        continue
+                    if self.tail_needs_moving(i):
+                        self.move_tail(i)
+
+        def move_tail(self, tail_index: int):
+            head = self.rope[tail_index - 1]
+            tail = self.rope[tail_index]
+            sign = lambda x: (x>0) - (x<0)
+            delta_x = head.x - tail.x
+            delta_y = head.y - tail.y
+            tail.set_coords(1*sign(delta_x), 1*sign(delta_y))
+    
+    # PART 1
+    rope = [Point(0, 0) for _ in range(2)]
+    state = State(rope)
+    for line in lines:
+        state.move_head(line.split(' ')[0], int(line.split(' ')[1]))
+    print(f'Tail have visited {len(rope[-1].visited_points)} tiles')
+
+    # PART 2
+    rope = [Point(0, 0) for _ in range(10)]
+    state = State(rope)
+    for line in lines:
+        state.move_head(line.split(' ')[0], int(line.split(' ')[1]))
+
+    print(f'Tail have visited {len(rope[-1].visited_points)} tiles')
