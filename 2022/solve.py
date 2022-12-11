@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 
 INPUT_FILE = sys.argv[1]
 DAY = sys.argv[2]
@@ -419,3 +420,150 @@ elif DAY == '9':
         state.move_head(line.split(' ')[0], int(line.split(' ')[1]))
 
     print(f'Tail have visited {len(rope[-1].visited_points)} tiles')
+
+elif DAY == '10':
+    print('Solving for DAY 10')
+
+    with open(INPUT_FILE, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+
+    class Device:
+        def __init__(self):
+            self.X = 1
+            self.cycle = 0
+            self.signal_strengths = []
+            self.CRT_drawing = ['']
+
+        def pixel(self):
+            pixel_position = self.cycle - (40 * (len(self.CRT_drawing)-1))
+            if pixel_position in [self.X-1, self.X, self.X+1]:
+                return '#'
+            else:
+                return '.'
+
+        def add_cycle(self):
+            self.CRT_drawing[-1] += self.pixel() 
+            self.cycle += 1
+            if (self.cycle == 20) or ((self.cycle-20) % 40 == 0):
+                self.signal_strengths.append(self.X * self.cycle)
+            elif self.cycle % 40 == 0:
+                self.CRT_drawing.append('')
+
+        def add_x(self, x: int):
+            self.X += x
+
+    device = Device()
+    for line in lines:
+        command = line.split(' ')[0]
+        if command == 'noop':
+            device.add_cycle()
+        elif command == 'addx':
+            device.add_cycle()
+            device.add_cycle()
+            device.add_x(int(line.split(' ')[1]))
+
+    print(f'The sum of signal strength is {sum(device.signal_strengths)}')
+    for line in device.CRT_drawing:
+        print(line)
+
+elif DAY == '11':
+    print('Solving for DAY 11')
+
+    with open(INPUT_FILE, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+
+    class Monkey:
+        def __init__(self, items: list, operator: str, factor: str, modulo: int, 
+                     true_target: int, false_target: int):
+            self.item_list = items
+            self.operator = operator
+            self.factor = factor
+
+            self.modulo = modulo
+
+            self.true_target = true_target
+            self.false_target = false_target
+
+            self.inspect_count = 0
+
+        def __repr__(self):
+            return f"""
+Item list: {self.item_list}
+Inspection Operation: old {self.operator} {self.factor}
+Test function: divisible by {self.modulo}
+True target: {self.true_target}
+False target: {self.false_target}
+        """
+        def add_item(self, item: int):
+            self.item_list.append(item)
+
+        def inspect_item(self, item: int) -> int:
+            self.inspect_count += 1
+            if self.factor == 'old':
+                factor = item
+            else:
+                factor = int(self.factor)
+
+            if self.operator == '+':
+                item += factor
+            elif self.operator == '*':
+                item *= factor
+
+            return item
+
+        def test_item(self, item: int) -> bool:
+            return True if item % self.modulo == 0 else False
+
+    monkeys = []
+    for line in lines:
+        if 'Starting' in line:
+            item_list = [int(x) for x in line.split(':')[1].replace(',', '').split(' ') if x]
+        elif 'Operation' in line:
+            operator = line.split(' ')[4]
+            factor = line.split(' ')[5]
+        elif 'Test' in line:
+            modulo = int(line.split(' ')[3])
+        elif 'If true' in line:
+            true_target = int(line.split(' ')[5])
+        elif 'If false' in line:
+            false_target = int(line.split(' ')[5])
+            monkeys.append(Monkey(item_list, operator, factor, modulo, true_target, false_target))
+
+    for i, monkey in enumerate(monkeys):
+        print(f'Monkey {i}')
+        print(monkey)
+
+    NUM_ROUNDS = 10000
+
+    super_modulo = math.prod([m.modulo for m in monkeys])
+    for i in range(NUM_ROUNDS):
+        #print(f'Start round {i}')
+        for i, monkey in enumerate(monkeys):
+            #print(f'Monkey {i}')
+            for item in list(monkey.item_list):
+                #print(f'  Monkey inspects an item with a worry level of {item}.')
+                item = monkey.inspect_item(item)
+                #if monkey.operator == '+':
+                    #print(f'    Worry level increases by {monkey.factor} to {item}.')
+                #elif monkey.operator == '*':
+                    #print(f'    Worry level is multiplied by {monkey.factor} to {item}.')
+                #item = math.trunc(item/3)
+                item = item % super_modulo
+                #print(f'    Monkey gets bored with item. Worry level is divided by 3 to {item}')
+                if monkey.test_item(item):
+                    #print(f'    Current worry level is divisible by {monkey.modulo}.')
+                    monkeys[monkey.true_target].add_item(item)
+                    #print(f'    Item with worry level {item} is thrown to monkey {monkey.true_target}')
+                else:
+                    #print(f'    Current worry level is not divisible by {monkey.modulo}.')
+                    monkeys[monkey.false_target].add_item(item)
+                    #print(f'    Item with worry level {item} is thrown to monkey {monkey.false_target}')
+                monkey.item_list.pop(0)
+
+    for i, monkey in enumerate(monkeys):
+        print(f'Monkey {i}: inspected items {monkey.inspect_count} times.')
+    sorted_inspect_count = sorted([m.inspect_count for m in monkeys], reverse=True)
+    print(f'Monkey shenanigans: {sorted_inspect_count[0] * sorted_inspect_count[1]}')
+
