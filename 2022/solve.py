@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+from queue import PriorityQueue
 
 INPUT_FILE = sys.argv[1]
 DAY = sys.argv[2]
@@ -566,4 +567,75 @@ False target: {self.false_target}
         print(f'Monkey {i}: inspected items {monkey.inspect_count} times.')
     sorted_inspect_count = sorted([m.inspect_count for m in monkeys], reverse=True)
     print(f'Monkey shenanigans: {sorted_inspect_count[0] * sorted_inspect_count[1]}')
+
+elif DAY == '12':
+    print('Solving for DAY 12')
+
+    with open(INPUT_FILE, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+
+    class Graph:
+        def __init__(self, lines: list):
+            self.lines = lines
+            self.set_coords(0, 0)
+
+        def get_coords(self):
+            return (self.x, self.y)
+
+        def set_coords(self, coords: tuple):
+            self.x = coords[0]
+            self.y = coords[1]
+            if lines[self.y][self.x] == 'S':
+                self.altitude = 'a'
+            else:
+                self.altitude = lines[self.y][self.x]
+
+        def get_neighbours(self): 
+            possible_destinations = []
+            if self.x-1 >= 0:
+                possible_destinations.append((self.x-1, self.y)) 
+            if self.x+1 < len(lines[self.y]): 
+                possible_destinations.append((self.x+1, self.y)) 
+            if self.y-1 >= 0: 
+                possible_destinations.append((self.x, self.y-1)) 
+            if self.y+1 < len(lines): 
+                possible_destinations.append((self.x, self.y+1)) 
+
+            for i, (new_x, new_y) in enumerate(list(possible_destinations)):
+                if ord(self.lines[new_y][new_x]) - ord(self.altitude) > 1:
+                    del possible_destinations[i]
+
+            return possible_destinations
+
+    class Astar:
+        def __init__(self, graph: Graph):
+            self.graph = graph
+            self.frontier = PriorityQueue()
+            self.frontier.put((0, self.graph.get_coords()))
+            self.origins = {}
+            self.origins[self.graph.get_coords()] = None
+            self.costs = {}
+            self.costs[self.graph.get_coords()] = 0
+
+        def solve(self):
+            while not self.frontier.empty():
+                current = self.frontier.get()
+                self.graph.set_coords(current)
+
+                if self.graph.altitude == 'E':
+                    break
+
+                for neighbour in self.graph.get_neighbours():
+                    new_cost = self.costs[current] + 1
+                    if neighbour not in self.costs or new_cost < self.costs[neighbour]:
+                        self.costs[neighbour] = new_cost
+
+                break
+
+    graph = Graph(lines)
+    while True:
+        print(f'I am currently at {(current_x, current_y)}. The altitude is {current_altitude}.')
+        break
+
 
