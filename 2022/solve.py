@@ -578,7 +578,14 @@ elif DAY == '12':
     class Graph:
         def __init__(self, lines: list):
             self.lines = lines
-            self.set_coords(0, 0)
+            for y, line in enumerate(lines):
+                for x, char in enumerate(line):
+                    if char == 'S':
+                        #print(f'Starting coordinates are {(x, y)}')
+                        self.set_coords((x, y))
+                    elif char == 'E':
+                        #print(f'Goal coordinates are {(x, y)}')
+                        self.goal_coords = (x, y)
 
         def get_coords(self):
             return (self.x, self.y)
@@ -602,11 +609,22 @@ elif DAY == '12':
             if self.y+1 < len(lines): 
                 possible_destinations.append((self.x, self.y+1)) 
 
+            index_to_delete = []
             for i, (new_x, new_y) in enumerate(list(possible_destinations)):
-                if ord(self.lines[new_y][new_x]) - ord(self.altitude) > 1:
-                    del possible_destinations[i]
+                if self.lines[new_y][new_x] == 'E':
+                    new_location_ord = ord('z')
+                else:
+                    new_location_ord = ord(self.lines[new_y][new_x])
+                if new_location_ord - ord(self.altitude) > 1:
+                    index_to_delete.append(i)
+
+            for index in sorted(index_to_delete, reverse=True):
+                del possible_destinations[index]
 
             return possible_destinations
+
+        def get_heuristic(self):
+            return math.dist(self.get_coords(), self.goal_coords)
 
     class Astar:
         def __init__(self, graph: Graph):
@@ -620,22 +638,37 @@ elif DAY == '12':
 
         def solve(self):
             while not self.frontier.empty():
-                current = self.frontier.get()
+                current = self.frontier.get()[1]
                 self.graph.set_coords(current)
 
                 if self.graph.altitude == 'E':
-                    break
+                    return self.costs[current]
 
                 for neighbour in self.graph.get_neighbours():
                     new_cost = self.costs[current] + 1
                     if neighbour not in self.costs or new_cost < self.costs[neighbour]:
                         self.costs[neighbour] = new_cost
-
-                break
+                        priority = new_cost + self.graph.get_heuristic()
+                        self.frontier.put((priority, neighbour))
+                        self.origins[neighbour] = current
 
     graph = Graph(lines)
-    while True:
-        print(f'I am currently at {(current_x, current_y)}. The altitude is {current_altitude}.')
-        break
+    astar = Astar(graph)
+    lowest_cost = astar.solve()
+    print(f'The fewest steps required is {lowest_cost}')
 
-
+    # PART2
+    costs = []
+    for y, line in enumerate(lines):
+        line_list = list(line)
+        for x, char in enumerate(line):
+            if char == 'a':
+                lines = [line.replace('S', 'a') for line in lines]
+                line_list[x] = 'S'
+                lines[y] = "".join(line_list)
+                graph = Graph(lines)
+                astar = Astar(graph)
+                cost = astar.solve()
+                if cost:
+                    costs.append(cost)
+    print(f'The fewest steps required is {min(costs)}')
