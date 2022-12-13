@@ -1,6 +1,8 @@
 import os
+import ast
 import sys
 import math
+from functools import cmp_to_key
 from queue import PriorityQueue
 
 INPUT_FILE = sys.argv[1]
@@ -672,3 +674,74 @@ elif DAY == '12':
                 if cost:
                     costs.append(cost)
     print(f'The fewest steps required is {min(costs)}')
+
+elif DAY == '13':
+    print('Solving for DAY 13')
+
+    with open(INPUT_FILE, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+
+    def compare(packet1: list, packet2: list, depth: int=1):
+        if isinstance(packet1, list) != isinstance(packet2, list):
+            if not isinstance(packet1, list):
+                packet1 = [packet1]
+                print("  "*depth + f"- Mixed types; convert left to {packet1} and retry comparison")
+            else:
+                packet2 = [packet2]
+                print("  "*depth + f"- Mixed types; convert right to {packet2} and retry comparison")
+            print("  "*depth + f"- Compare {packet1} vs {packet2}")
+        for value1, value2 in zip(packet1, packet2):
+            print("  "*depth + f"- Compare {value1} vs {value2}")
+            try:
+                if (int(value1) == value1) and (int(value2) == value2):
+                    if value1 == value2:
+                        continue
+                    elif value1 < value2:
+                        print("    "*depth + f"- Left side is smaller, so inputs are in the right order")
+                        return 1
+                    elif value1 > value2:
+                        print("    "*depth + f"- Right side is smaller, so inputs are not in the right order")
+                        return -1
+            except TypeError:
+                result = compare(value1, value2, depth=depth+1)
+                if result != 0:
+                    return result
+        if len(packet1) < len(packet2):
+            print("  "*depth + f"- Left side ran out of items, so inputs are in the right order")
+            return 1
+        elif len(packet1) > len(packet2):
+            print("  "*depth + f"- Right side ran out of items, so inputs are not in the right order")
+            return -1
+        elif packet1 == packet2:
+            return 0
+        return 0
+
+    list1 = None
+    pair_count = 1
+    true_index = []
+    print(f"== Pair {pair_count} ==")
+    for line in lines:
+        print(line)
+        if line.startswith('['):
+            line = ast.literal_eval(line)
+            if list1 == None:
+                list1 = line
+            else:
+                list2 = line
+                print(f"- Compare {list1} vs {list2}")
+                if compare(list1, list2) == 1:
+                    true_index.append(pair_count)
+        else:
+            print(line)
+            pair_count += 1
+            print(f"== Pair {pair_count} ==")
+            list1 = None
+
+    print(f"The sum of indices in the right order are {sum(true_index)}")
+    all_lines = [ast.literal_eval(line) for line in lines if line.startswith('[')]
+    all_lines.extend([[[2]],[[6]]])
+    pairs_sorted = sorted(all_lines, key=cmp_to_key(compare), reverse=True)
+
+    i1, i2 = pairs_sorted.index([[2]])+1, pairs_sorted.index([[6]])+1
+    print(f"The product of the index of the two divider packets are {i1*i2}")
