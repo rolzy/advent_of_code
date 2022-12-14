@@ -751,13 +751,12 @@ elif DAY == '14':
 
     with open(INPUT_FILE, 'r') as f:
         lines = f.readlines()
-    lines = [line.strip() for line in lines]
+    lines = [line.strip().split(' -> ') for line in lines]
     map = {}
     min_x, min_y, max_x, max_y = None, None, None, None
 
     # Generate map
-    for line in lines:
-        points = line.split(' -> ')
+    for points in lines:
         for i, point in enumerate(points):
             point = tuple(int(point) for point in point.split(','))
             if (min_x == None) or (min_x > point[0]):
@@ -771,8 +770,24 @@ elif DAY == '14':
 
     for y in range(min_y, max_y+1):
         map[y] = '.' * (max_x-min_x+1)
+
+    for points in lines:
+        for i, point in enumerate(points):
+            if i == 0:
+                continue
+            line_start = tuple(int(p) for p in points[i-1].split(','))
+            line_end = tuple(int(p) for p in point.split(','))
+            if line_start[0] == line_end[0]:
+                x_offset = line_start[0] - min_x
+                for y in range(line_start[1], line_end[1]+1):
+                    string_list = list(map[y])
+                    string_list[x_offset] = '+'
+                    map[y] = "".join(string_list)
+                print('x is the same')
+            elif line_start[1] == line_end[1]:
+                print('y is the same')
+            print(line_start)
+            print(line_end)
     for k, v in map.items():
         print(f'{k} {v}')
-            
-
 
