@@ -745,3 +745,34 @@ elif DAY == '13':
 
     i1, i2 = pairs_sorted.index([[2]])+1, pairs_sorted.index([[6]])+1
     print(f"The product of the index of the two divider packets are {i1*i2}")
+
+elif DAY == '14':
+    print('Solving for DAY 14')
+
+    with open(INPUT_FILE, 'r') as f:
+        lines = f.readlines()
+    lines = [line.strip() for line in lines]
+    map = {}
+    min_x, min_y, max_x, max_y = None, None, None, None
+
+    # Generate map
+    for line in lines:
+        points = line.split(' -> ')
+        for i, point in enumerate(points):
+            point = tuple(int(point) for point in point.split(','))
+            if (min_x == None) or (min_x > point[0]):
+                 min_x = point[0]
+            if (max_x == None) or (max_x < point[0]):
+                 max_x = point[0]
+            if (min_y == None) or (min_y > point[1]):
+                 min_y = point[1]
+            if (max_y == None) or (max_y < point[1]):
+                 max_y = point[1]
+
+    for y in range(min_y, max_y+1):
+        map[y] = '.' * (max_x-min_x+1)
+    for k, v in map.items():
+        print(f'{k} {v}')
+            
+
+
