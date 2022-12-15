@@ -752,10 +752,10 @@ elif DAY == '14':
     with open(INPUT_FILE, 'r') as f:
         lines = f.readlines()
     lines = [line.strip().split(' -> ') for line in lines]
-    map = {}
+    cave_map = {}
     min_x, min_y, max_x, max_y = None, None, None, None
 
-    # Generate map
+    # Generate cave_map
     for points in lines:
         for i, point in enumerate(points):
             point = tuple(int(point) for point in point.split(','))
@@ -767,9 +767,13 @@ elif DAY == '14':
                  min_y = point[1]
             if (max_y == None) or (max_y < point[1]):
                  max_y = point[1]
+    for y in range(0, max_y+1):
+        cave_map[y] = '.' * (max_x-min_x+1)
 
-    for y in range(min_y, max_y+1):
-        map[y] = '.' * (max_x-min_x+1)
+    def replace_char(x: int, y:int, char: str = '#'):
+        string_list = list(cave_map[y])
+        string_list[x] = char
+        cave_map[y] = "".join(string_list)
 
     for points in lines:
         for i, point in enumerate(points):
@@ -780,14 +784,44 @@ elif DAY == '14':
             if line_start[0] == line_end[0]:
                 x_offset = line_start[0] - min_x
                 for y in range(line_start[1], line_end[1]+1):
-                    string_list = list(map[y])
-                    string_list[x_offset] = '+'
-                    map[y] = "".join(string_list)
-                print('x is the same')
+                    replace_char(x_offset, y)
             elif line_start[1] == line_end[1]:
-                print('y is the same')
-            print(line_start)
-            print(line_end)
-    for k, v in map.items():
-        print(f'{k} {v}')
+                x_start = min(line_start[0] - min_x, line_end[0] - min_x)
+                x_end = max(line_start[0] - min_x, line_end[0] - min_x)
+                for x in range(x_start, x_end+1):
+                    replace_char(x, line_start[1])
 
+    sand_count = 0
+    while True:
+        for k, v in cave_map.items():
+            print(f'{k} {v}')
+        sand_coord = [500-min_x, 0]
+        if cave_map[sand_coord[1]][sand_coord[0]] == 'O':
+            break
+        while True:
+            try:
+                bottom_coord = cave_map[sand_coord[1]+1][sand_coord[0]]
+            except KeyError:
+                print(f"The sand count is {sand_count}")
+                replace_char(sand_coord[0], sand_coord[1], 'O')
+                for k, v in cave_map.items():
+                    print(f'{k} {v}')
+                sys.exit()
+            if bottom_coord == '.':
+                sand_coord[1] += 1
+                continue
+            else:
+                bottom_left_coord = cave_map[sand_coord[1]+1][sand_coord[0]-1]
+                if bottom_left_coord == '.':
+                    sand_coord[0] -= 1
+                    sand_coord[1] += 1
+                    continue
+                else:
+                    bottom_right_coord = cave_map[sand_coord[1]+1][sand_coord[0]+1]
+                    if bottom_right_coord == '.':
+                        sand_coord[0] += 1
+                        sand_coord[1] += 1
+                        continue
+                replace_char(sand_coord[0], sand_coord[1], 'O')
+                sand_count += 1
+                break
